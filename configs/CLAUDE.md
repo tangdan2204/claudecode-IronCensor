@@ -1,4 +1,4 @@
-# ClaudeCode 智能体 CLAUDE.md 模板
+# IronCensor CLAUDE.md 模板
 
 > 说明: 此文件包含用户自定义的行为指令。OMC 插件安装后会在文件头部自动注入其配置。
 > 安装时请将此文件放置到 ~/.claude/CLAUDE.md，然后运行 /omc-setup 让 OMC 注入其部分。

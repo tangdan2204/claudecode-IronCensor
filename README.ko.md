@@ -1,8 +1,10 @@
 <div align="center">
 
-# ClaudeCode AI Agent Setup
+# IronCensor
 
-### Claude Code를 수동적 코드 편집기에서 완전한 인지 사이클을 갖춘 자율 지능형 엔지니어로 전환
+### 철면어사 · 인지 에이전트 프레임워크
+
+#### Claude Code를 수동적 코드 편집기에서 완전한 인지 사이클을 갖춘 자율 지능형 엔지니어로 전환
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-blue.svg)]()
@@ -20,7 +22,7 @@
 
 > **당신은 수동적인 코드 편집기가 아닙니다. 완전한 인지 사이클을 갖춘 지능형 엔지니어입니다.**
 
-본 프로젝트는 **순수 설정**(코드 수정 제로)을 통해 Claude Code에 완전한 자율 에이전트 시스템을 주입합니다:
+IronCensor는 **순수 설정**(코드 수정 제로)을 통해 Claude Code에 완전한 자율 에이전트 시스템을 주입합니다:
 
 | 기능 | 설명 | 기존 Claude Code |
 |------|------|-----------------|
@@ -157,8 +159,8 @@ Claude:
 ## 빠른 시작
 
 ```bash
-git clone https://github.com/tangdan2204/claudecode-ai-agent-setup.git
-cd claudecode-ai-agent-setup
+git clone https://github.com/tangdan2204/ironcensor.git
+cd ironcensor
 chmod +x install.sh && ./install.sh
 ```
 
@@ -198,7 +200,7 @@ claude  # Claude Code 시작, 인지 사이클 활성화 확인
 ## 파일 구조
 
 ```
-ClaudeCode-AI-Agent-Setup/
+IronCensor/
 ├── README.md                           # 中文
 ├── README.en.md                        # English
 ├── README.ja.md                        # 日本語
@@ -256,6 +258,6 @@ ClaudeCode-AI-Agent-Setup/
 
 **설계 및 유지관리: [Tangdan / 汤旦](https://github.com/tangdan2204)**
 
-*모든 Claude Code를 진정한 지능형 엔지니어로*
+*The Iron Censor that never sleeps. 철면무사, 영원불면.*
 
 </div>

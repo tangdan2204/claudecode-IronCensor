@@ -1,14 +1,16 @@
 <div align="center">
 
-# ClaudeCode AI Agent Setup
+# IronCensor
 
-### 将 Claude Code 从被动代码编辑器转变为拥有完整认知循环的自主智能工程师
+### 铁面御史 · 认知智能体框架 — 将 Claude Code 从被动编辑器锻造为自主智能工程师
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-blue.svg)]()
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-Compatible-green.svg)]()
 
 [English](./README.en.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md)
+
+**The Iron Censor that never sleeps. 铁面无私，永不休眠。**
 
 **作者: Tangdan / 汤旦**
 
@@ -20,7 +22,7 @@
 
 > **你不是一个被动的代码编辑器。你是一个拥有完整认知循环的智能工程师。**
 
-本项目通过**纯配置**方式（零代码入侵），为 Claude Code 注入一套完整的自主智能体系统，使其具备：
+IronCensor 通过**纯配置**方式（零代码入侵），为 Claude Code 注入一套完整的自主智能体系统，使其具备：
 
 | 能力 | 描述 | 传统 Claude Code |
 |------|------|-----------------|
@@ -37,7 +39,7 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                    Claude Code 智能体系统                      │
+│                    IronCensor 智能体系统                      │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
 │  ┌─ 硬安全层 (Hooks + settings.json) ───────────────────┐   │
@@ -182,7 +184,7 @@ ELSE:
 ## 文件结构
 
 ```
-ClaudeCode-AI-Agent-Setup/
+IronCensor/
 ├── README.md                           # 本文件（中文）
 ├── README.en.md                        # English README
 ├── README.ja.md                        # 日本語 README
@@ -229,8 +231,8 @@ ClaudeCode-AI-Agent-Setup/
 ### 一键安装
 
 ```bash
-git clone https://github.com/tangdan2204/claudecode-ai-agent-setup.git
-cd claudecode-ai-agent-setup
+git clone https://github.com/tangdan2204/ironcensor.git
+cd ironcensor
 chmod +x install.sh
 ./install.sh
 ```
@@ -424,6 +426,6 @@ Claude: "检测到压缩恢复，执行 7 步恢复检查列表..."
 
 **由 [Tangdan / 汤旦](https://github.com/tangdan2204) 设计和维护**
 
-*让每一个 Claude Code 都成为真正的智能工程师*
+*The Iron Censor that never sleeps. 铁面无私，永不休眠。*
 
 </div>

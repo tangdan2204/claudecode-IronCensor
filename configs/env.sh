@@ -1,5 +1,5 @@
 #!/bin/bash
-# ClaudeCode 智能体配置工程 - 统一环境变量
+# IronCensor - 统一环境变量
 # 所有 hook 脚本通过 source 加载此文件
 # 修改此处即可全局生效，无需逐个修改脚本
 

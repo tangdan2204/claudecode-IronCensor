@@ -1,8 +1,10 @@
 <div align="center">
 
-# ClaudeCode AI Agent Setup
+# IronCensor
 
-### Transform Claude Code from a passive code editor into an autonomous intelligent engineer with a complete cognitive cycle
+### The Iron Censor — Cognitive Agent Framework for Claude Code
+
+#### Transform Claude Code from a passive code editor into an autonomous intelligent engineer with a complete cognitive cycle
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-blue.svg)]()
@@ -20,7 +22,7 @@
 
 > **You are not a passive code editor. You are an intelligent engineer with a complete cognitive cycle.**
 
-This project injects a complete autonomous agent system into Claude Code through **pure configuration** (zero code modification):
+IronCensor injects a complete autonomous agent system into Claude Code through **pure configuration** (zero code modification):
 
 | Capability | Description | Traditional Claude Code |
 |------------|-------------|------------------------|
@@ -192,8 +194,8 @@ Claude: "Compression recovery detected. Running 7-step recovery checklist..."
 ### One-Line Install
 
 ```bash
-git clone https://github.com/tangdan2204/claudecode-ai-agent-setup.git
-cd claudecode-ai-agent-setup
+git clone https://github.com/tangdan2204/ironcensor.git
+cd ironcensor
 chmod +x install.sh && ./install.sh
 ```
 
@@ -230,7 +232,7 @@ claude  # Start Claude Code and test
 ## File Structure
 
 ```
-ClaudeCode-AI-Agent-Setup/
+IronCensor/
 ├── configs/
 │   ├── settings.json         # Permission config + 24 deny rules
 │   ├── hooks.json            # Hook routing table (7 lifecycle events)
@@ -279,6 +281,6 @@ ClaudeCode-AI-Agent-Setup/
 
 **Designed and maintained by [Tangdan / 汤旦](https://github.com/tangdan2204)**
 
-*Making every Claude Code a true intelligent engineer*
+*The Iron Censor that never sleeps.*
 
 </div>

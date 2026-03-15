@@ -1,11 +1,11 @@
 #!/bin/bash
-# ClaudeCode 智能体配置工程 - 自动安装脚本
+# IronCensor - 自动安装脚本
 # 用法: chmod +x install.sh && ./install.sh
 
 set -euo pipefail
 
 echo "=========================================="
-echo "  ClaudeCode 智能体配置工程 - 自动安装"
+echo "  IronCensor - 铁面御史 · 自动安装"
 echo "=========================================="
 echo ""
 
