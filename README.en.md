@@ -2,27 +2,68 @@
 
 # IronCensor
 
-### The Iron Censor — Cognitive Agent Framework for Claude Code
+### The Iron Censor — Cognitive Agent Framework
 
-#### Transform Claude Code from a passive code editor into an autonomous intelligent engineer with a complete cognitive cycle
+#### Transform Claude Code from a passive editor into an autonomous intelligent engineer
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-blue.svg)]()
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-Compatible-green.svg)]()
+[![Zero Code](https://img.shields.io/badge/Zero%20Code-Pure%20Config-orange.svg)]()
+[![Hooks](https://img.shields.io/badge/Hooks-8%20Lifecycle-purple.svg)]()
 
 [中文](./README.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md)
 
-**Author: Tangdan / 汤旦**
+**The Iron Censor that never sleeps.**
+
+**Author: [Tangdan / 汤旦](https://github.com/tangdan2204)**
 
 </div>
 
 ---
 
-## Core Innovations
+## Why IronCensor?
 
-> **You are not a passive code editor. You are an intelligent engineer with a complete cognitive cycle.**
+> **One-line install, zero code invasion — give your Claude Code a complete cognitive cycle, safety governance, and self-evolution capability.**
 
-IronCensor injects a complete autonomous agent system into Claude Code through **pure configuration** (zero code modification):
+```bash
+git clone https://github.com/tangdan2204/claudecode-IronCensor.git && cd ironcensor && ./install.sh
+```
+
+### Three Core Differentiators
+
+**🧠 Cognitive Cycle** — Not just executing commands, but thinking like an engineer
+
+Every task goes through a complete **Perceive→Think→Plan→Execute→Verify→Reflect→Evolve** seven-stage closed loop. The AI proactively senses risks, invokes specialized tools for analysis, creates scientific plans, validates as it works, and reflects and evolves after completion.
+
+**🛡️ Defense-in-Depth** — 8-layer security architecture, 3 hard-intercept layers that cannot be bypassed
+
+`settings.json deny` (24 rules) → `safety-guard.sh` (26 detections) → `sensitive-filter.sh` (24 filters) — three exit 2 hard-intercept layers form the security core. The AI cannot bypass them. 5 additional monitoring layers provide defense redundancy.
+
+**📈 Self-Evolution** — Gets stronger with use, recurring issues decrease over time
+
+Four-tier progressive learning: Fix-and-audit → Repeated-triggers-global-audit → Deep-reflection → Lateral-inference. Corrected once → logged; twice → rule upgrade; three times → automation proposal.
+
+---
+
+## Comparison with Similar Tools
+
+| Dimension | IronCensor | [everything-claude-code](https://github.com/affaan-m/everything-claude-code) | [oh-my-claudecode](https://github.com/anthropics/claude-code) | [Trail of Bits Config](https://github.com/trailofbits/claude-code-config) | [IronCurtain](https://github.com/provos/ironcurtain) |
+|-----------|------------|------|------|------|------|
+| **Cognitive Cycle** | ✅ 7-stage closed loop | ❌ None | ❌ None | ❌ None | ❌ None |
+| **Security Layers** | ✅ 8 layers (3 hard) | ⚠️ Guide only (no hooks) | ⚠️ Basic hooks | ✅ Production-grade | ✅ Constitutional engine |
+| **Self-Learning** | ✅ 4-tier progressive | ❌ None | ❌ None | ❌ None | ❌ None |
+| **Governance** | ✅ Three-branch checks | ❌ None | ⚠️ Agent orchestration | ❌ None | ⚠️ Policy constraints |
+| **Installation** | Pure config (zero deps) | Pure config | npm install | Pure config | npm install |
+| **Multi-Agent** | ✅ OMC compatible | ⚠️ Limited | ✅ Native support | ❌ None | ❌ None |
+| **Context Recovery** | ✅ Auto save/restore | ❌ None | ⚠️ Basic | ❌ None | ❌ None |
+| **Circuit Breaker** | ✅ Count+time+hard stop | ❌ None | ❌ None | ❌ None | ❌ None |
+
+> **IronCensor is the only pure-config framework that simultaneously covers Cognitive Cycle + Safety Governance + Self-Evolution + Multi-Agent Orchestration.**
+
+---
+
+## Core Capabilities
 
 | Capability | Description | Traditional Claude Code |
 |------------|-------------|------------------------|

@@ -2,27 +2,68 @@
 
 # IronCensor
 
-### 铁面御史 · 认知智能体框架 — 将 Claude Code 从被动编辑器锻造为自主智能工程师
+### 铁面御史 · 认知智能体框架
+
+#### 将 Claude Code 从被动编辑器锻造为自主智能工程师
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-blue.svg)]()
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-Compatible-green.svg)]()
+[![Zero Code](https://img.shields.io/badge/Zero%20Code-Pure%20Config-orange.svg)]()
+[![Hooks](https://img.shields.io/badge/Hooks-8%20Lifecycle-purple.svg)]()
 
 [English](./README.en.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md)
 
 **The Iron Censor that never sleeps. 铁面无私，永不休眠。**
 
-**作者: Tangdan / 汤旦**
+**作者: [Tangdan / 汤旦](https://github.com/tangdan2204)**
 
 </div>
 
 ---
 
-## 核心革新
+## 为什么选择 IronCensor？
 
-> **你不是一个被动的代码编辑器。你是一个拥有完整认知循环的智能工程师。**
+> **一行安装，零代码入侵，让你的 Claude Code 拥有完整的认知循环、安全治理和自我进化能力。**
 
-IronCensor 通过**纯配置**方式（零代码入侵），为 Claude Code 注入一套完整的自主智能体系统，使其具备：
+```bash
+git clone https://github.com/tangdan2204/claudecode-IronCensor.git && cd ironcensor && ./install.sh
+```
+
+### 三大核心差异化
+
+**🧠 认知循环** — 不只是执行命令，而是像工程师一样思考
+
+每个任务经历完整的 **感知→思考→规划→执行→验证→反思→进化** 七阶段闭环。AI 会主动感知风险、调用专业工具分析、制定科学计划、边做边验证，并在完成后反思和进化。
+
+**🛡️ 纵深防御** — 八层安全架构，三层硬拦截不可绕过
+
+`settings.json deny`（24条） → `safety-guard.sh`（26条检测） → `sensitive-filter.sh`（24种过滤）三层 exit 2 硬拦截构成安全核心，AI 无法绕过。另有 5 层辅助监控形成纵深冗余。
+
+**📈 自我进化** — 越用越强，同类问题出现频率递减
+
+四层递进学习：修复即审计 → 重复触发全局审计 → 深度反省 → 举一反三。被纠正 1 次记录、2 次升级规则、3 次提议自动化检测。
+
+---
+
+## 与同类工具对比
+
+| 维度 | IronCensor | [everything-claude-code](https://github.com/affaan-m/everything-claude-code) | [oh-my-claudecode](https://github.com/anthropics/claude-code) | [Trail of Bits Config](https://github.com/trailofbits/claude-code-config) | [IronCurtain](https://github.com/provos/ironcurtain) |
+|------|------------|------|------|------|------|
+| **认知循环** | ✅ 七阶段完整闭环 | ❌ 无 | ❌ 无 | ❌ 无 | ❌ 无 |
+| **安全防御层数** | ✅ 8层（3层硬拦截） | ⚠️ 安全指南（无 Hook） | ⚠️ 基础 Hook | ✅ 生产级安全 | ✅ 宪法策略引擎 |
+| **自我学习/进化** | ✅ 四层递进 | ❌ 无 | ❌ 无 | ❌ 无 | ❌ 无 |
+| **治理框架** | ✅ 三省六部制衡 | ❌ 无 | ⚠️ Agent 编排 | ❌ 无 | ⚠️ 策略约束 |
+| **安装方式** | 纯配置（零依赖） | 纯配置 | npm 安装 | 纯配置 | npm 安装 |
+| **多代理编排** | ✅ 兼容 OMC | ⚠️ 有限 | ✅ 原生支持 | ❌ 无 | ❌ 无 |
+| **上下文恢复** | ✅ 自动保存/恢复 | ❌ 无 | ⚠️ 基础 | ❌ 无 | ❌ 无 |
+| **熔断机制** | ✅ 计数+时间+硬阻止 | ❌ 无 | ❌ 无 | ❌ 无 | ❌ 无 |
+
+> **IronCensor 是唯一同时覆盖「认知循环 + 安全治理 + 自我进化 + 多代理编排」的纯配置框架。**
+
+---
+
+## 核心能力一览
 
 | 能力 | 描述 | 传统 Claude Code |
 |------|------|-----------------|
