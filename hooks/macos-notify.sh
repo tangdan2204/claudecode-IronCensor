@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-INPUT=$(cat)
+INPUT=$(cat 2>/dev/null || echo '{}')
 TYPE=$(echo "$INPUT" | jq -r '.type // "unknown"' 2>/dev/null)
 
 case "$TYPE" in

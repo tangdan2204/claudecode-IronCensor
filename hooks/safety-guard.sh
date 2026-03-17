@@ -8,7 +8,7 @@
 set -euo pipefail
 
 # 读取 stdin JSON
-INPUT=$(cat)
+INPUT=$(cat 2>/dev/null || echo '{}')
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
 
 # 如果提取不到命令，放行（其他工具可能不是 Bash）

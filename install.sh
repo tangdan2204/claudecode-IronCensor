@@ -4,6 +4,51 @@
 
 set -euo pipefail
 
+# --check 模式：仅比对，不安装
+if [ "${1:-}" = "--check" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+  USER_NAME=$(whoami)
+  HOOKS_DIR="$HOME/.claude/hooks"
+  OUTDATED=0
+  echo "🔍 IronCensor 版本同步检查..."
+  for script in "$SCRIPT_DIR/hooks/"*.sh; do
+    [ -f "$script" ] || continue
+    BASENAME=$(basename "$script")
+    INSTALLED="$HOOKS_DIR/$BASENAME"
+    if [ ! -f "$INSTALLED" ]; then
+      echo "  ❌ $BASENAME 未安装"
+      OUTDATED=$((OUTDATED + 1))
+    else
+      SRC_MD5=$(md5 -q "$script" 2>/dev/null || md5sum "$script" | awk '{print $1}')
+      DST_MD5=$(md5 -q "$INSTALLED" 2>/dev/null || md5sum "$INSTALLED" | awk '{print $1}')
+      if [ "$SRC_MD5" != "$DST_MD5" ]; then
+        SRC_LINES=$(wc -l < "$script")
+        DST_LINES=$(wc -l < "$INSTALLED")
+        echo "  ⚠️ $BASENAME 已过时 (安装=${DST_LINES}行, 项目=${SRC_LINES}行)"
+        OUTDATED=$((OUTDATED + 1))
+      fi
+    fi
+  done
+  # 检查 rules 和 configs
+  for f in rules/dangerous-commands.txt rules/sensitive-patterns.txt; do
+    if [ -f "$SCRIPT_DIR/$f" ] && [ ! -f "$HOME/.claude/$f" ]; then
+      echo "  ❌ $f 未安装"
+      OUTDATED=$((OUTDATED + 1))
+    fi
+  done
+  if [ ! -f "$HOME/.claude/configs/env.sh" ]; then
+    echo "  ❌ configs/env.sh 未安装"
+    OUTDATED=$((OUTDATED + 1))
+  fi
+  if [ "$OUTDATED" -eq 0 ]; then
+    echo "  ✅ 所有文件已同步"
+  else
+    echo ""
+    echo "  发现 $OUTDATED 个文件需要更新，请运行: ./install.sh"
+  fi
+  exit 0
+fi
+
 echo "=========================================="
 echo "  IronCensor - 铁面御史 · 自动安装"
 echo "=========================================="
@@ -158,7 +203,7 @@ else
 fi
 
 # 验证脚本权限
-for script in safety-guard.sh sensitive-filter.sh pre-compact-save.sh post-compact-restore.sh post-edit-audit.sh verify-before-stop.sh macos-notify.sh session-banner.sh; do
+for script in safety-guard.sh sensitive-filter.sh pre-compact-save.sh post-compact-restore.sh post-edit-audit.sh verify-before-stop.sh macos-notify.sh session-banner.sh session-summary.sh reflection-enforcer.sh bugfix-audit-trigger.sh correction-detector.sh learning-trend-injector.sh; do
   if [ -x "$HOOKS_DIR/$script" ]; then
     echo "  ✅ $script 有执行权限"
   else
@@ -168,6 +213,28 @@ for script in safety-guard.sh sensitive-filter.sh pre-compact-save.sh post-compa
     fi
   fi
 done
+
+# 验证文件内容同步（P002 防复发）
+echo ""
+echo "🔄 验证版本同步..."
+SYNC_WARNINGS=0
+for script in "$SCRIPT_DIR/hooks/"*.sh; do
+  if [ -f "$script" ]; then
+    BASENAME=$(basename "$script")
+    INSTALLED="$HOOKS_DIR/$BASENAME"
+    if [ -f "$INSTALLED" ]; then
+      SRC_MD5=$(md5 -q "$script" 2>/dev/null || md5sum "$script" | awk '{print $1}')
+      DST_MD5=$(md5 -q "$INSTALLED" 2>/dev/null || md5sum "$INSTALLED" | awk '{print $1}')
+      if [ "$SRC_MD5" != "$DST_MD5" ]; then
+        echo "  ⚠️ $BASENAME 安装后内容不一致（可能被外部修改）"
+        SYNC_WARNINGS=$((SYNC_WARNINGS + 1))
+      fi
+    fi
+  fi
+done
+if [ "$SYNC_WARNINGS" -eq 0 ]; then
+  echo "  ✅ 所有 hook 脚本内容与项目源码一致"
+fi
 
 echo ""
 

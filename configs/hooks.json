@@ -9,6 +9,10 @@
           },
           {
             "type": "command",
+            "command": "/Users/tangdan/.claude/hooks/learning-trend-injector.sh"
+          },
+          {
+            "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-start.sh"
           },
           {
@@ -30,6 +34,10 @@
     "SessionEnd": [
       {
         "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/tangdan/.claude/hooks/session-summary.sh"
+          },
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-end.sh"
@@ -76,6 +84,10 @@
           {
             "type": "command",
             "command": "/Users/tangdan/.claude/hooks/post-edit-audit.sh"
+          },
+          {
+            "type": "command",
+            "command": "/Users/tangdan/.claude/hooks/bugfix-audit-trigger.sh"
           }
         ]
       }
@@ -101,6 +113,11 @@
             "type": "command",
             "command": "/Users/tangdan/.claude/hooks/verify-before-stop.sh",
             "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "/Users/tangdan/.claude/hooks/reflection-enforcer.sh",
+            "timeout": 10
           }
         ]
       }
@@ -116,6 +133,15 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/auto-feedback.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "不对|不是|错了|不要|wrong|no not|instead|don't|shouldn't",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/tangdan/.claude/hooks/correction-detector.sh"
           }
         ]
       },

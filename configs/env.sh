@@ -73,3 +73,47 @@ export PATTERNS_UPDATE_TIMEOUT=60
 
 # 监控的敏感目录模式（正则，用于 sensitive-filter.sh）
 export SENSITIVE_DIR_PATTERN='\.claude/.*memory|\.claude/.*CLAUDE|\.omc/|\.env$'
+
+# ============================================================
+# 自我进化数据路径
+# ============================================================
+
+# 任务缓冲区（AI 内部状态外化通道，hook 可读取验证）
+export TASK_BUFFER_PATH=".omc/state/task-buffer.json"
+
+# Agent 自省日志（记录 Agent 输出中的自省字段）
+export AGENT_INSIGHTS_LOG="${LOG_DIR}/agent-insights.jsonl"
+
+# 会话摘要目录（跨会话温记忆）
+export SESSION_SUMMARY_DIR=".omc/state/sessions"
+
+# ============================================================
+# 自我进化硬化配置
+# ============================================================
+
+# transcript 提取：从 .jsonl 提取的最大文件路径数
+export TRANSCRIPT_MAX_FILES=20
+
+# transcript 提取：从 .jsonl 提取的最大命令数
+export TRANSCRIPT_MAX_COMMANDS=10
+
+# task-buffer 新鲜度检查间隔（每 N 次编辑检查一次）
+export TASK_BUFFER_CHECK_INTERVAL=10
+
+# task-buffer 过期阈值（分钟）
+export TASK_BUFFER_STALE_MINUTES=5
+
+# 反思强制：编辑计数阈值（超过此值且 patterns 未更新则提醒）
+export REFLECTION_EDIT_THRESHOLD=3
+
+# bug 修复检测关键词（用于 bugfix-audit-trigger）
+export BUGFIX_KEYWORDS="fix|bug|repair|patch|hotfix|resolve|修复|修正|修bug"
+
+# 用户纠正检测关键词（用于 correction-detector）
+export CORRECTION_KEYWORDS="不对|不是|错了|别|不要|换一个|重新|wrong|no not|instead|don't|shouldn't|stop"
+
+# 学习趋势警告：高频模式阈值
+export LEARNING_TREND_HIGH_FREQ=3
+
+# 学习趋势警告：最近会话检查数
+export LEARNING_TREND_SESSION_COUNT=5

@@ -9,7 +9,7 @@
 
 set -euo pipefail
 
-INPUT=$(cat)
+INPUT=$(cat 2>/dev/null || echo '{}')
 FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
 TOOL=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
 SESSION=$(echo "$INPUT" | jq -r '.session_id // "unknown"' 2>/dev/null)
@@ -83,6 +83,39 @@ if [[ "$FILE" =~ \.(ts|tsx|js|jsx|py|go|rs|java|vue|svelte|json|yaml|yml|toml|sh
       LINE_COUNT=$(wc -l < "$LOG_FILE" | tr -d ' ')
       if [ "$LINE_COUNT" -gt "$MAX_LINES" ]; then
         tail -"$RETAIN_LINES" "$LOG_FILE" > "$LOG_FILE.tmp" && mv "$LOG_FILE.tmp" "$LOG_FILE"
+      fi
+    fi
+
+    # ============================================================
+    # task-buffer.json 新鲜度检查: 每 N 次编辑提醒外化状态
+    # ============================================================
+    CHECK_INTERVAL="${TASK_BUFFER_CHECK_INTERVAL:-10}"
+    STALE_MINUTES="${TASK_BUFFER_STALE_MINUTES:-5}"
+    CWD_DIR=$(echo "$INPUT" | jq -r '.cwd // "."' 2>/dev/null)
+    TOTAL_EDITS=$(wc -l < "$LOG_FILE" 2>/dev/null | tr -d ' ')
+
+    if [ $((TOTAL_EDITS % CHECK_INTERVAL)) -eq 0 ] && [ "$TOTAL_EDITS" -gt 0 ]; then
+      TASK_BUFFER_FILE="${CWD_DIR}/${TASK_BUFFER_PATH:-.omc/state/task-buffer.json}"
+      if [ ! -f "$TASK_BUFFER_FILE" ]; then
+        # 自动初始化 task-buffer.json（解决"4个hook读取但0个hook写入"的问题）
+        TASK_BUFFER_DIR=$(dirname "$TASK_BUFFER_FILE")
+        if mkdir -p "$TASK_BUFFER_DIR" 2>/dev/null; then
+          cat > "$TASK_BUFFER_FILE" << TEOF
+{
+  "task": "（待AI更新）",
+  "progress": "进行中",
+  "blocked": null,
+  "decisions": [],
+  "files_changed": ["$FILE"],
+  "next_step": "（待AI更新）",
+  "created_by": "post-edit-audit.sh",
+  "created_at": "$TIMESTAMP"
+}
+TEOF
+          echo "[IronCensor] 💡 已自动创建 task-buffer.json。请在执行阶段更新任务目标、进度和决策，以确保压缩恢复质量。" >&2
+        fi
+      elif [ "$(find "$TASK_BUFFER_FILE" -mmin +"$STALE_MINUTES" 2>/dev/null)" ]; then
+        echo "[IronCensor] 💡 task-buffer.json 已超过${STALE_MINUTES}分钟未更新。请刷新任务状态以确保压缩恢复质量。" >&2
       fi
     fi
 

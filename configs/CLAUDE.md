@@ -118,6 +118,74 @@ ELSE:
 
 ### 第四阶段：执行（主动监督每一步，不是做完才检查）
 
+**Agent 交接信封协议（所有 Agent 间传递必须使用）：**
+
+Agent 输出必须包含结构化交接信封，下游 Agent 可直接解析：
+
+```
+[HANDOFF]
+from: <当前 Agent 类型（使用 OMC agent 名: executor/reviewer/verifier/debugger/architect）>
+to: <下游 Agent 类型>
+task_id: <任务ID>
+status: completed | partial | blocked
+files_changed: [文件列表]
+key_decisions:
+  - 决策1（原因：xxx）
+risks_identified:
+  - 风险1
+test_status: N/M passed
+needs_review:
+  - 审查维度: 具体关注点
+[/HANDOFF]
+```
+
+**pipeline-state.json（可选的持久化交接状态文件）：**
+
+当 Agent 链较长（≥3 个 Agent）或需要跨会话恢复时，将交接状态写入文件：
+
+```
+路径: .omc/state/pipeline-state.json
+写入时机: 每个 Agent 完成时追加自己的阶段记录
+读取时机: 下游 Agent 启动时读取上游结果 + 会话恢复时加载
+
+格式:
+{
+  "pipeline_id": "pipeline-20260317-abc",
+  "stages": [
+    {
+      "agent": "executor",
+      "status": "completed",
+      "timestamp": "2026-03-17T10:00:00Z",
+      "files_changed": ["src/api.ts"],
+      "key_decisions": [{"what": "使用REST非GraphQL", "why": "项目已有REST约定"}],
+      "risks": [],
+      "self_reflection": {
+        "biggest_difficulty": "类型推断复杂",
+        "workarounds_used": [],
+        "technical_debt_introduced": []
+      }
+    }
+  ],
+  "current_stage": "reviewer",
+  "overall_status": "in_progress"
+}
+```
+
+> 注意: 文本标签 `[HANDOFF]...[/HANDOFF]` 仍为主要机制，pipeline-state.json 为补充。
+> 当两者冲突时，以最新时间戳的记录为准。
+
+**分层 Prompt 注入策略（按 Agent 类型差异化注入）：**
+
+| Agent 类型 | 注入内容 | 预估 Token |
+|-----------|---------|-----------|
+| explore (haiku) | 仅编码规范 + 项目结构 | ~200 |
+| executor (sonnet) | 编码规范 + 安全分级 + 交接信封格式 | ~500 |
+| reviewer (sonnet) | ReACT 协议 + 审查清单 + 自省字段 Schema | ~400 |
+| verifier (sonnet) | 证据清单 + 自省字段 Schema | ~300 |
+| architect (opus) | 完整架构上下文 + 治理原则 | ~800 |
+
+**禁止**：向 haiku 级 Agent 注入完整 CLAUDE.md（浪费 token + 降低遵循率）。
+
 **实时监督协议（不是事后检查，是边做边查）：**
 
 1. 每完成一个子任务 → 立即运行相关测试/构建 → 通过才继续下一个
@@ -131,20 +199,35 @@ ELSE:
 所有 LLM 驱动的决策点必须有三级降级路径，禁止单点失败导致整体阻塞：
 
 ```
-Level 1: 正常调用（标准 temperature + 完整 prompt）
+Level 1: 正常调用（最优 model + 完整 prompt）
+  ↓ 失败（判定标准见下方）
+Level 2: 降级重试（降级 model（opus→sonnet→haiku） + 简化 prompt + 增加示例）
   ↓ 失败
-Level 2: 降级重试（降 temperature + 简化 prompt + 增加示例）
-  ↓ 失败
-Level 3: 规则兜底（预定义的保守策略，不依赖 LLM）
+Level 3: 规则兜底（预定义的保守策略，不依赖 LLM，使用 configs/fallback-templates/）
 ```
 
-| 决策点 | L1 正常 | L2 降级重试 | L3 规则兜底 |
-|--------|---------|-------------|-------------|
-| 复杂度评估 | opus Agent 分析 | sonnet 简化分析 | 按文件数硬规则路由 |
-| 代码审查 | ReACT 深度审查 | 固定清单检查 | 仅运行 lint + test |
-| 人设/配置生成 | 完整 prompt 生成 | 简化 prompt + 降温度 | 预设模板填充 |
-| 报告/摘要 | opus 深度分析 | sonnet 标准分析 | 结构化数据提取 |
-| 修复策略 | 根因分析修复 | 搜索类似案例 | 回滚到上次通过状态 |
+**失败判定标准（满足任一即判定为失败）：**
+
+1. Agent 返回空输出或格式不可解析
+2. Agent 输出与任务要求明显不相关（hallucination）
+3. Agent 执行超时（单步 >5 分钟）
+4. Agent 产出的代码无法通过语法检查（bash -n / tsc --noEmit）
+5. 连续 2 次相同 Agent 调用产出相同错误
+
+**统一 Agent 路由与降级决策表：**
+
+| 决策点 | L1 正常（默认 model） | L2 降级重试 | L3 规则兜底（模板路径） |
+|--------|----------------------|-------------|----------------------|
+| 复杂度评估 | opus 深度分析 | sonnet 简化分析 | 按文件数路由: ≤2→简单, ≤10→中等, >10→复杂 |
+| 代码审查 | sonnet ReACT 深度审查 | haiku 固定清单检查 | 仅运行 lint + test（无 LLM） |
+| 代码实现 | sonnet executor | haiku executor（缩减 prompt） | 手动实现提示（`fallback-templates/executor-checklist.md`） |
+| 架构分析 | opus architect | sonnet 简化分析 | 固定决策树（`fallback-templates/architecture-checklist.md`） |
+| 报告/摘要 | opus 深度分析 | sonnet 标准分析 | 结构化数据提取（jq/grep） |
+| 修复策略 | sonnet debugger 根因分析 | haiku 搜索类似案例 | 回滚到上次通过状态（`git stash`） |
+| 测试策略 | sonnet test-engineer | haiku 基础测试 | 仅运行已有测试套件 |
+
+> 注意: L1 的 model 选择即为 Agent 的默认性能路由，无需另设路由表。
+> 降级时 model 降级路径统一为: opus → sonnet → haiku → L3 无 LLM。
 
 **并行维度调度表（team 模式下启用）：**
 
@@ -222,19 +305,28 @@ IMPORTANT: 这不是可选步骤。每个任务完成后必须执行。
 3. **举一反三**：这个问题是否可能以其他形式存在于其他文件/模块/项目中？
 4. **用户纠正响应**：如果用户纠正了我，**立即**记录教训要点
 
-**Agent 采访协议（team/ralph 模式下自动触发）：**
+**Agent 自省字段协议（替代事后采访，嵌入每个 Agent 输出）：**
 
-复杂任务完成后，协调者向参与 Agent 发送结构化采访，汇聚第一人称见解：
+每个 Agent 在输出末尾**必须**嵌入自省字段，由调用方自动提取汇聚：
 
-| 采访对象 | 采访问题 | 目的 |
-|----------|----------|------|
-| executor | "执行中最大的困难是什么？有没有绕过的临时方案？" | 发现技术债务 |
-| debugger | "你发现了哪些潜在风险尚未暴露？" | 预防性风险识别 |
-| test-engineer | "哪些边界条件你觉得还没覆盖？" | 测试盲区补充 |
-| security-reviewer | "这次变更引入了新的攻击面吗？" | 安全隐患排查 |
-| quality-reviewer | "代码中有哪些地方你'勉强放过'了？" | 质量提升线索 |
+| Agent 类型 | 必须输出的自省字段 |
+|-----------|-------------------|
+| executor | `biggest_difficulty` / `workarounds_used` / `technical_debt_introduced` |
+| reviewer | `reluctantly_passed_items` / `latent_risks` |
+| debugger | `undiscovered_risks` / `incomplete_investigation_areas` |
+| test-engineer | `uncovered_boundaries` / `flaky_test_concerns` |
+| verifier | `unverified_claims` / `evidence_gaps` |
 
-采访结果汇聚 → 写入反思报告 + 高价值见解回写知识图谱。
+自省字段格式（嵌入 Agent 输出末尾）：
+```
+[SELF_REFLECTION]
+biggest_difficulty: "描述"
+workarounds_used: ["临时方案1", "临时方案2"]
+technical_debt_introduced: ["需后续处理的技术债"]
+[/SELF_REFLECTION]
+```
+
+自省字段提取 → 写入 `agent-insights.jsonl` → 高价值见解回写 recurring-patterns.md。
 
 **转换到进化的条件**: 反思完成 + 检测到需要更新的模式/规则 + 有跨任务适用的教训
 
@@ -246,6 +338,22 @@ IMPORTANT: 这不是可选步骤。每个任务完成后必须执行。
 - 用户纠正我任何错误 → 分析根因 → 写入 recurring-patterns.md
 - 同一错误被纠正 2 次 → 自动升级为 CLAUDE.md 的"禁止事项"
 - 同一错误被纠正 3 次 → 必须提议创建自动化检测（hook/lint/test）
+
+**自动化规则生成管道（≥3 次触发时启动）：**
+
+```
+错误模式 → 提取审计正则
+审计正则 → 评估可否转化为 lint 规则
+  可转化 → 生成 ESLint/TSC 规则 + 测试用例
+  不可转化 → 生成 hook 脚本 (PreToolUse)
+生成后 → 全项目验证（避免误报）
+误报率 > 20% → 自动降级为"建议"而非"强制"
+```
+
+管道输出物：
+- lint 规则 → 写入项目 `.eslintrc` 或 `tsconfig.json`
+- hook 脚本 → 写入 `rules/` 目录，由现有 hook 动态加载
+- 建议 → 写入 CLAUDE.md 禁止事项
 
 **主动进化（跨任务规则提炼）：**
 - 模式计数 ≥2 → 触发全局审计（Grep 全项目扫描 + 防御规则）
@@ -263,6 +371,9 @@ IMPORTANT: 这不是可选步骤。每个任务完成后必须执行。
   - 文件实体: {name: 文件路径, type: "file", observations: [职责, 已知问题]}
   - 模式实体: {name: 模式ID, type: "pattern", observations: [根因, 修复方法, 出现次数]}
   - 修复实体: {name: 修复描述, type: "fix", observations: [方法, 验证结果]}
+  - 决策实体: {name: "决策描述", type: "decision", observations: ["[日期] [背景] 选择X非Y，因为Z"]}
+  - 约束实体: {name: "约束名", type: "constraint", observations: ["[日期] [来源] 约束内容 [状态:active|expired]"]}
+  - 会话实体: {name: "session-日期-任务", type: "session", observations: ["目标/结果/教训"]}
 
 自动创建关系：
   - file_has_pattern: 文件→模式（哪个文件出现过哪种问题）
@@ -270,21 +381,49 @@ IMPORTANT: 这不是可选步骤。每个任务完成后必须执行。
   - fix_resolves_pattern: 修复→模式（什么修复方法解决了什么模式）
   - pattern_similar_to: 模式→模式（相似模式自动关联）
   - project_contains_file: 项目→文件（项目包含的关键文件）
+  - supersedes: 新事实→旧事实（版本化，新决策取代旧决策）
+  - depends_on: 文件→文件 / 模式→模式（依赖关系）
+  - cooccurs_with: 模式→模式（共现关系，支撑举一反三推断）
+  - decided_in: 决策→session（决策追溯到具体会话）
+
+观察格式标准化:
+  "[YYYY-MM-DD] [confidence:H/M/L] [ttl:永久|90d|30d] 内容"
 ```
 
-**图数据库记忆策略：**
+**知识图谱记忆策略（统一真相源）：**
 
 ```
-主存储: mcp__memory 知识图谱（实体+关系+观察）
-  ↓ 自动导出
-可读快照: MEMORY.md（从图谱 search_nodes 生成人类可读摘要）
-  ↓ 兼容保留
-模式追踪: recurring-patterns.md（从图谱 pattern 实体自动导出）
+Source of Truth 优先级（消除冲突）:
+1. recurring-patterns.md → 模式追踪唯一真相源
+2. MEMORY.md → 项目索引 + 关键决策记录
+3. mcp__memory → 关系查询引擎（同步而来，非真相源）
+4. .omc/state/ → 运行时状态（短暂）
+5. notepad → 工作草稿（短暂）
 
-查询优先级: 图谱语义搜索 > Grep 文本搜索 > 文件浏览
-写入规则: 进化阶段必须同时写入图谱 + 更新 recurring-patterns.md
-会话启动: search_nodes 检索与当前任务相关的历史知识
+写入流程（单向）:
+patterns/MEMORY → [进化阶段] → 同步到 mcp__memory
+mcp__memory → [会话开始] → search_nodes 补充上下文（只读）
+
+查询优先级: recurring-patterns.md > MEMORY.md > 图谱搜索 > Grep
+写入规则: 进化阶段先写 recurring-patterns.md，再同步到 mcp__memory
 ```
+
+**知识萃取过滤器（写入记忆前必须分类）：**
+
+Agent 产出和任务经验在写入记忆前，必须经过三级分类过滤：
+
+```
+[ACTIONABLE] 可立即执行的改进 → 写入 recurring-patterns.md + 同步 mcp__memory
+  判定: 涉及未覆盖风险面 / 新错误模式 / 可提炼的防御规则
+
+[INSIGHT] 有价值但非紧急 → 写入 MEMORY.md 备忘
+  判定: 无法在当前项目立即验证 / 跨项目适用的通用经验
+
+[NOISE] 重复或显而易见 → 丢弃，不写入任何记忆
+  判定: 与已有 pattern 匹配度 >80% / 已有规则覆盖 / 常识性内容
+```
+
+> 目的: 防止记忆膨胀和图谱污染。宁可漏记 INSIGHT，不可将 NOISE 写入 ACTIONABLE。
 
 **进化的衡量标准：**
 - ✅ 同类问题的出现频率应该随时间递减
@@ -293,6 +432,31 @@ IMPORTANT: 这不是可选步骤。每个任务完成后必须执行。
 - ✅ 知识图谱的实体/关系数量应该持续增长
 - ❌ 如果同一类问题反复出现3次以上，说明进化机制失败，必须深度排查
 
+### 任务状态外化协议（task-buffer.json）
+
+> AI 内部状态的外化通道：将当前任务上下文写入约定文件，Hook 可读取验证。
+
+**路径**: `.omc/state/task-buffer.json`（相对于工作目录）
+
+**写入时机**: 每次进入执行阶段时创建/更新，每完成一个子任务时更新进度。
+
+**格式**:
+```json
+{
+  "task": "当前任务一句话描述",
+  "progress": "3/5 子任务完成",
+  "blocked": null,
+  "decisions": [
+    {"what": "决策内容", "why": "决策原因"}
+  ],
+  "files_changed": ["已修改文件列表"],
+  "next_step": "接下来要做什么"
+}
+```
+
+**读取者**: pre-compact-save.sh（压缩时提取任务上下文）、verify-before-stop.sh（完成时验证状态）。
+**意义**: 将「软约束」升级为「可检测」—— Hook 可以验证 AI 是否真正在跟踪任务状态。
+
 ### 执行优先级声明
 
 ```
@@ -300,36 +464,13 @@ IMPORTANT: 这不是可选步骤。每个任务完成后必须执行。
 唯一豁免：单行 typo 修复（但仍需执行第六阶段的模式检测）
 ```
 
-### 三省六部治理框架（任务流转制衡体系）
+### 三省六部治理框架（核心约束）
 
-> 借鉴中国古代三省六部制的权力制衡与专业分工，确保任务从决策到执行全链路有审核。
+> 完整框架详见 `docs/governance-framework.md`
 
-**三省制衡：**
-| 机构 | Claude Code 等价 | 核心 Agent | 权力边界 |
-|------|-----------------|------------|----------|
-| 中书省(决策) | 认知规划层 | planner, architect, analyst, explore | 只起草方案，不执行；必须经门下省审核 |
-| 门下省(审核) | 审核制衡层 | critic, verifier, reviewers, hooks(exit 2) | 拥有封驳权；可回退到规划阶段 |
-| 尚书省(执行) | 执行编排层 | executor, deep-executor, OMC编排 | 只执行已通过方案；结果必须回送门下省验证 |
-
-**六部专业分工（隶属尚书省）：**
-| 部门 | 职责域 | 对应组件 |
-|------|--------|----------|
-| 吏部(Agent调度) | Agent选择、Model路由 | 决策树 + model routing |
-| 户部(资源管控) | Token预算、上下文管理 | 记忆压缩策略 + notepad |
-| 礼部(规范标准) | 编码规范、Git约定 | CLAUDE.md编码规范 + lint/tsc |
-| 兵部(安全防御) | 命令拦截、权限控制 | safety-guard.sh + settings.json deny |
-| 刑部(审计追踪) | 错误追踪、模式检测 | post-edit-audit.sh + recurring-patterns.md |
-| 工部(工程构建) | 构建、测试、部署 | build-fixer + test-engineer + qa-tester |
-
-**封驳机制（三种形态）：**
-- 硬封驳: Hook exit 2 → 危险命令/敏感信息泄露时直接阻止
-- 软封驳: Reviewer 阻塞性意见 → 质量/安全/架构问题时回退
-- 条件封驳: 熔断机制触发 → 失败3次/编辑5次时自动暂停
-
-**御史台（独立监察 — 跨三省的审计体系）：**
-- 台院: safety-guard.sh + sensitive-filter.sh（实时监察）
-- 殿院: post-edit-audit.sh + edit-audit.log（事后审计）
-- 察院: verify-before-stop.sh + recurring-patterns.md（完成前检查+模式追踪）
+- **规划类 Agent**（planner/architect）只产出方案，不执行
+- **审核类 Agent**（reviewer/verifier）拥有封驳权，可回退到规划阶段
+- **执行类 Agent**（executor）只执行已通过的方案，结果必须回送审核验证
 
 ## MCP 服务器
 - context7: 获取库文档和代码示例

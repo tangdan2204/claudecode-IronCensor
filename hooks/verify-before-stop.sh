@@ -7,7 +7,7 @@
 
 set -euo pipefail
 
-INPUT=$(cat)
+INPUT=$(cat 2>/dev/null || echo '{}')
 
 # 防止无限循环：如果已经在 stop hook 中，直接放行
 STOP_ACTIVE=$(echo "$INPUT" | jq -r '.stop_hook_active // false' 2>/dev/null)
@@ -68,13 +68,31 @@ if [ -f "$LOG_FILE" ]; then
 fi
 
 # ============================================================
-# 检查 4: recurring-patterns.md 是否在本次会话中被更新过（反思阶段执行证据）
+# 检查 4: recurring-patterns.md 内容变更检测（基于 checksum，非 mtime）
 # ============================================================
 PATTERNS_FILE="$HOME/.claude/projects/-Users-$(whoami)/memory/recurring-patterns.md"
+PATTERNS_CHECKSUM_FILE="$HOME/.claude/logs/.patterns-checksum-stop"
 if [ -f "$PATTERNS_FILE" ]; then
-  if [ "$(find "$PATTERNS_FILE" -mmin +"$PATTERN_TIMEOUT" 2>/dev/null)" ]; then
-    WARNINGS="${WARNINGS} 💡 recurring-patterns.md 超过${PATTERN_TIMEOUT}分钟未更新，请确认是否执行了反思阶段。"
+  CURRENT_CHECKSUM=$(md5 -q "$PATTERNS_FILE" 2>/dev/null || md5sum "$PATTERNS_FILE" 2>/dev/null | awk '{print $1}')
+  if [ -f "$PATTERNS_CHECKSUM_FILE" ]; then
+    SAVED_CHECKSUM=$(cat "$PATTERNS_CHECKSUM_FILE" 2>/dev/null)
+    if [ "$CURRENT_CHECKSUM" = "$SAVED_CHECKSUM" ]; then
+      # 内容未变——检查文件是否超时未更新
+      if [ "$(find "$PATTERNS_FILE" -mmin +"$PATTERN_TIMEOUT" 2>/dev/null)" ]; then
+        WARNINGS="${WARNINGS} 💡 recurring-patterns.md 内容未变且超过${PATTERN_TIMEOUT}分钟，请确认是否执行了反思阶段。"
+      fi
+    fi
   fi
+  # 保存当前 checksum 供下次对比
+  echo "$CURRENT_CHECKSUM" > "$PATTERNS_CHECKSUM_FILE" 2>/dev/null || true
+fi
+
+# ============================================================
+# 检查 5: task-buffer.json 存在性检查（验证任务状态外化）
+# ============================================================
+TASK_BUFFER="${TASK_BUFFER_PATH:-$CWD/.omc/state/task-buffer.json}"
+if [ -d "$CWD/.omc" ] && [ ! -f "$TASK_BUFFER" ]; then
+  WARNINGS="${WARNINGS} 💡 .omc 目录存在但 task-buffer.json 缺失，任务状态可能未外化。"
 fi
 
 if [ -n "$WARNINGS" ]; then
